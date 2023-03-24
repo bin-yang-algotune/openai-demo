@@ -144,3 +144,4 @@ cloud_sql_proxy
 /dev.env
 
 /.vscode/*
+.vercel
