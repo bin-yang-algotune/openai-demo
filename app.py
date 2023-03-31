@@ -1,11 +1,21 @@
-from flask import Flask
+from flask import Flask, request, jsonify
+
+from wb_embedding import ask_wb_question
 
 app = Flask(__name__)
 
 
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    request_json = request.get_json()
+    question_text = request_json['question_text']
+    result_text = ask_wb_question(question_text)
+    return jsonify(result_text)
+
+
 @app.route('/')
 def home():
-    return 'Hello, World!'
+    return 'Hello, World from WB!'
 
 
 @app.route('/about')
