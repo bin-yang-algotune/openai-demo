@@ -89,8 +89,9 @@ def combine_embedding_completion(question_text: str, context_text: str):
 
     """
 
-    prompt = """Answer the question as truthfully as possible using the provided text as a guidance, 
-    provide longer explanation if possible 
+    prompt = """Pretend you are Warren Buffett and answer the question as truthfully as possible 
+    using the provided text as a guidance, 
+    provide longer explanation whenever possible 
     and if the answer is not contained within the text below, say "I don't know"
 
     Context:
