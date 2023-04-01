@@ -10,10 +10,14 @@ CORS(app)
 @app.route('/ask', methods=['POST'])
 def ask_question():
     request_json = request.get_json()
-    question_text = request_json['question_text']
-    print(question_text)
-    result_text = ask_wb_question(question_text)
-    return jsonify(result_text)
+    user_id = request_json['role']
+    if user_id != 'user':
+        return request_json
+    else:
+        question_text = request_json['content']
+        print(question_text)
+        result_text = ask_wb_question(question_text)
+        return jsonify(result_text)
 
 
 @app.route('/')
