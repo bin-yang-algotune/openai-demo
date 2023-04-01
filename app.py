@@ -9,6 +9,7 @@ app = Flask(__name__)
 def ask_question():
     request_json = request.get_json()
     question_text = request_json['question_text']
+    print(question_text)
     result_text = ask_wb_question(question_text)
     return jsonify(result_text)
 
