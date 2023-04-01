@@ -12,3 +12,4 @@ six==1.16.0
 tokenizers==0.13.2
 urllib3==1.26.14
 transformers==4.27.3
+flask-cors==3.0.10

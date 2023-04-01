@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from wb_embedding import ask_wb_question
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/ask', methods=['POST'])
