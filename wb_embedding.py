@@ -10,7 +10,7 @@ from wb_chatbot import get_training_data_wb_transcript, get_training_data_final
 
 EMBEDDING_MODEL = 'text-embedding-ada-002'
 COMPLETIONS_MODEL = "text-davinci-003"
-
+# COMPLETIONS_MODEL = 'gpt-3.5-turbo'
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
