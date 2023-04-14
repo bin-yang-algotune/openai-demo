@@ -21,10 +21,6 @@ class WBChatBot:
             """
         else:
             self.initial_prompt = initial_prompt
-        self.init_prompt()
-
-    def init_prompt(self):
-        self.chat_history = []
         self.chat_history.append({'role': 'system', 'content': self.initial_prompt})
 
     def chat_all(self, message_list: List[Dict[str, str]]):
