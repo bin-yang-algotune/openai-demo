@@ -133,7 +133,7 @@ def find_relevant_topics(question_text: str,
     :param input_data:
     :param top_n:
     Usage:
-    >>> question_text = 'what do you think about technology companies, is it investible?'
+    >>> question_text = 'what do you think about EBITDA'
     >>> input_data = get_training_data_final()
     >>> top_n = 2
     >>> find_relevant_topics(question_text, input_data, top_n)
