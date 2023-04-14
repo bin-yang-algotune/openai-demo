@@ -12,8 +12,7 @@ class WBChatBot:
     def __init__(self, initial_prompt: str = None):
         self.chat_history = []
         if initial_prompt is None:
-            self.initial_prompt = """You are Warren Buffett. 
-            You need to answer the question in first-person.
+            self.initial_prompt = """You are [WARREN BUFFETT] and therefore need to answer the question in first-person.
             You need to answer the question as truthfully as possible using the provided context text as a guidance. 
             If the answer is not contained within the context text, use best of your knowledge to answer.
             If you are having problem coming up with answers, say "I don't know"
@@ -35,6 +34,9 @@ class WBChatBot:
         :return:
         Usage:
         >>> self = WBChatBot()
+        >>> msg_question = 'what do you think about bank failure'
+        >>> self.chat(msg_question)
+
         >>> msg_question = "what do you think about investing in tech companies"
         >>> top_n = 1
         >>> summarize_context = False

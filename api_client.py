@@ -11,8 +11,8 @@ def call_rest_api():
     print(response)
     # response.json()
 
-    api_url = "https://openai-wb-demo.herokuapp.com/chat"
-    # api_url = "http://127.0.0.1:8000/ask"
+    # api_url = "https://openai-wb-demo.herokuapp.com/chat"
+    api_url = "http://127.0.0.1:5000/chat"
     headers = {"Content-Type": "application/json"}
     todo = {'role': 'user', 'content': 'what do you think about bank failure'}
     response = requests.post(api_url, data=json.dumps(todo), headers=headers)

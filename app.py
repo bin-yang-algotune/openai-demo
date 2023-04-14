@@ -30,7 +30,7 @@ def chat_w_wb():
         return request_json
     else:
         question_text = request_json['content']
-        print(question_text)
+        print(chatbot.chat_history)
         result_text = chatbot.chat(question_text)
         return jsonify(result_text['content'])
 
@@ -43,3 +43,7 @@ def home():
 @app.route('/about')
 def about():
     return 'About'
+
+#
+# if __name__ == "__main__":
+#     app.run()
