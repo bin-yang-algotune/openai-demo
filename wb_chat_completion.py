@@ -91,7 +91,7 @@ class WBChatBot:
 
         if len(result_msg) > 0:
             if include_ref:
-                result_msg['content'] += '\\n reference: {}'.format(ref_text)
+                result_msg['content'] += ' [reference: {}]'.format(ref_text)
             self.chat_history.append(result_msg)
         return result_msg
 
