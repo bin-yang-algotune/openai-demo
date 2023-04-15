@@ -25,9 +25,10 @@ class WBChatBot:
     def chat_all(self, message_list: List[Dict[str, str]]):
         pass
 
-    def chat(self, msg_question: str, top_n: int = 1, summarize_context: bool = False):
+    def chat(self, msg_question: str, top_n: int = 1, summarize_context: bool = False, include_ref: bool = True):
         """
         create a single question function which takes the chat history into consideration
+        :param include_ref:
         :param msg_question:
         :param top_n:
         :param summarize_context:
@@ -89,6 +90,8 @@ class WBChatBot:
         self.chat_history.append(new_system_msg)
 
         if len(result_msg) > 0:
+            if include_ref:
+                result_msg['content'] += ref_text
             self.chat_history.append(result_msg)
         return result_msg
 
