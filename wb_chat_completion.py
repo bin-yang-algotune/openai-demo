@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, List
 
 import openai
@@ -90,11 +91,11 @@ class WBChatBot:
         self.chat_history.append(new_system_msg)
 
         if len(result_msg) > 0:
-            if include_ref:
-                result_msg['reference'] = ref_text
             self.chat_history.append(result_msg)
-
-        return result_msg
+        result_msg_return = copy.copy(result_msg)
+        if include_ref:
+            result_msg_return['reference'] = ref_text
+        return result_msg_return
 
     def chat_reset(self):
         self.chat_history = []
