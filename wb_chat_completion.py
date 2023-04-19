@@ -142,6 +142,8 @@ class WBChatBot:
 
         new_msg_list.append(gen_user_msg)
         result_msg = chat_message_list(new_msg_list)
+        if ref_df and len(ref_df) > 0:
+            result_msg['reference'] = '\n'.join(ref_df['source'])
         return result_msg
 
     def chat_reset(self):
