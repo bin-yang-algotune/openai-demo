@@ -35,8 +35,15 @@ def chat_w_wb():
         return jsonify(result_text)
 
 
+@app.route('/chat_all', methods=['POST'])
+def chat_w_wb_all():
+    request_json = request.get_json()
+    result_text = chatbot.chat_all(request_json)
+    return jsonify(result_text)
+
+
 @app.route('/reset', methods=['POST'])
-def chat_w_wb():
+def reset_w_wb():
     chatbot.chat_reset()
     return jsonify("SUCCESS")
 

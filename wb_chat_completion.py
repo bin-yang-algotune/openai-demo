@@ -1,12 +1,54 @@
 import copy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import openai
+import pandas as pd
 
 from wb_chatbot import get_training_data_final
 from wb_embedding import find_relevant_topics
 
 CHAT_COMPLETIONS_MODEL = "gpt-3.5-turbo"
+
+
+def generate_question_message(input_message: Dict[str, str],
+                              top_n: int = 1,
+                              similarity_score_threshold: float = 0.8) -> Tuple[Dict[str, str], pd.DataFrame]:
+    """
+    based on a raw user question, query to add context and create a new user message
+    :param similarity_score_threshold:
+    :param input_message:
+    :param top_n:
+    :return:
+    """
+    input_data = get_training_data_final()
+    result = find_relevant_topics(input_message['content'], input_data, top_n=top_n)
+    result = result.loc[result['similarity_score'] > similarity_score_threshold]
+    if len(result) > 0:
+        new_user_message = {'role': 'user',
+                            'content':
+                                """context: {}
+                                  Q:{}
+                                  A:""".format('\n'.join(result['source']), input_message['content'])
+                            }
+    else:
+        new_user_message = input_message
+    return new_user_message, result
+
+
+def chat_message_list(message_list: List[Dict[str, str]], temperature=0.1, **kwargs: Dict) -> Dict[str, str]:
+    result_msg = {}
+    try:
+        completion = openai.ChatCompletion.create(
+            model=CHAT_COMPLETIONS_MODEL,
+            messages=message_list,
+            temperature=temperature,
+            **kwargs
+        )
+        if completion is not None and len(completion['choices']) > 0:
+            result_msg = completion['choices'][0]['message'].to_dict()
+    except Exception as e:
+        result_msg = {'role': 'assistant', 'content': f'Request failed with exception {e}'}
+    return result_msg
 
 
 class WBChatBot:
@@ -23,16 +65,15 @@ class WBChatBot:
             self.initial_prompt = initial_prompt
         self.chat_history.append({'role': 'system', 'content': self.initial_prompt})
 
-    def chat_all(self, message_list: List[Dict[str, str]]):
-        pass
-
-    def chat(self, msg_question: str, top_n: int = 1, summarize_context: bool = False, include_ref: bool = True):
+    def chat(self,
+             msg_question: str,
+             top_n: int = 1,
+             similarity_score_threshold: float = 0.8):
         """
         create a single question function which takes the chat history into consideration
-        :param include_ref:
+        :param similarity_score_threshold:
         :param msg_question:
         :param top_n:
-        :param summarize_context:
         :return:
         Usage:
         >>> self = WBChatBot()
@@ -53,49 +94,55 @@ class WBChatBot:
         >>> msg_question = "even if you might miss out alot of potential alphas for berkshire hathway?"
         >>> self.chat(msg_question)
         """
-        input_data = get_training_data_final()
-        result = find_relevant_topics(msg_question, input_data, top_n=top_n)
-        result = result.loc[result['similarity_score'] > 0.8]
-        if summarize_context:
-            context_str = ''
-            ref_text = ''
-        else:
-            ref_text = '\n'.join(result['source'])
-            context_str = '\n'.join(result['content'])
+        orig_user_msg = {
+            'role': 'user',
+            'content': msg_question
+        }
+        gen_user_msg, ref_df = generate_question_message(orig_user_msg, top_n=top_n,
+                                                         similarity_score_threshold=similarity_score_threshold)
 
-        new_system_msg = {'role': 'user',
-                          'content': """context: {}
-                          reference:{}
-                          Q:{}
-                          A:""".format(context_str, ref_text, msg_question)
-                          }
-        self.chat_history.append(new_system_msg)
-        result_msg = {}
-        try:
-            completion = openai.ChatCompletion.create(
-                model=CHAT_COMPLETIONS_MODEL,
-                messages=self.chat_history,
-                temperature=0.1
-            )
-            if completion is not None and len(completion['choices']) > 0:
-                result_msg = completion['choices'][0]['message'].to_dict()
-        except Exception as e:
-            result_msg = {'role': 'assistant', 'content': f'Request failed with exception {e}'}
-        # due to token size issue, we want to include context for the latest question only,
-        # this may impact the quality of the results, but allow us to keep the conversation going longer
-        self.chat_history.pop()
-        new_system_msg = {'role': 'user',
-                          'content': """Q:{}
-                                  A:""".format(msg_question)
-                          }
-        self.chat_history.append(new_system_msg)
+        msg_list = copy.copy(self.chat_history)
+        msg_list.append(gen_user_msg)
+        result_msg = chat_message_list(self.chat_history)
 
-        if len(result_msg) > 0:
-            self.chat_history.append(result_msg)
-        result_msg_return = copy.copy(result_msg)
-        if include_ref:
-            result_msg_return['reference'] = ref_text
-        return result_msg_return
+        # we only add the original question msg to the chat history without the context,
+        # this is to avoid the max token issues with openai api
+        self.chat_history.append(orig_user_msg)
+        self.chat_history.append(result_msg)
+
+        return result_msg
+
+    def chat_all(self,
+                 message_list: List[Dict[str, str]],
+                 top_n: int = 1,
+                 similarity_score_threshold: float = 0.8):
+        """
+        pass in all the messages
+        :param similarity_score_threshold:
+        :param top_n:
+        :param message_list:
+        usage:
+        >>> message_list = [{'role': 'user','content':'what do you think about tech companies'}]
+
+        >>> message_list = [{'role': 'user','content':'what do you think about tech companies'},
+        {'role': 'system','content':'i would like to invest in companies I know'},
+        {'role': 'user','content':'but you have invested in tech companies in the past correct?'},
+        ]
+
+        >>> self = WBChatBot()
+        >>> self.chat_all(message_list)
+        """
+        self.chat_reset()
+        new_msg_list = copy.copy(self.chat_history)
+        new_msg_list.extend(message_list)
+        new_q = new_msg_list.pop()
+
+        gen_user_msg = generate_question_message(new_q, top_n=top_n,
+                                                 similarity_score_threshold=similarity_score_threshold)
+
+        new_msg_list.append(gen_user_msg)
+        result_msg = chat_message_list(new_msg_list)
+        return result_msg
 
     def chat_reset(self):
         self.chat_history = []
