@@ -90,8 +90,8 @@ class WBChatBot:
         self.chat_history.append(new_system_msg)
 
         if len(result_msg) > 0:
-            # if include_ref:
-            #     result_msg['reference'] = ref_text
+            if include_ref:
+                result_msg['reference'] = ref_text
             self.chat_history.append(result_msg)
 
         return result_msg

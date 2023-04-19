@@ -32,7 +32,7 @@ def chat_w_wb():
         question_text = request_json['content']
         print(chatbot.chat_history)
         result_text = chatbot.chat(question_text, include_ref=True)
-        return jsonify(result_text['content'])
+        return jsonify(result_text)
 
 
 @app.route('/')
