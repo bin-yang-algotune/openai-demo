@@ -35,6 +35,12 @@ def chat_w_wb():
         return jsonify(result_text)
 
 
+@app.route('/reset', methods=['POST'])
+def chat_w_wb():
+    chatbot.chat_reset()
+    return jsonify("SUCCESS")
+
+
 @app.route('/')
 def home():
     return 'Hello, World from WB!'
