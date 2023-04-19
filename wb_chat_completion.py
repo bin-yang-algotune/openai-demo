@@ -137,8 +137,8 @@ class WBChatBot:
         new_msg_list.extend(message_list)
         new_q = new_msg_list.pop()
 
-        gen_user_msg = generate_question_message(new_q, top_n=top_n,
-                                                 similarity_score_threshold=similarity_score_threshold)
+        gen_user_msg, ref_df = generate_question_message(new_q, top_n=top_n,
+                                                         similarity_score_threshold=similarity_score_threshold)
 
         new_msg_list.append(gen_user_msg)
         result_msg = chat_message_list(new_msg_list)
