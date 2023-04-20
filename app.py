@@ -6,7 +6,6 @@ from wb_embedding import ask_wb_question
 
 app = Flask(__name__)
 CORS(app)
-chatbot = WBChatBot()
 
 
 @app.route('/ask', methods=['POST'])
@@ -22,30 +21,18 @@ def ask_question():
         return jsonify(result_text)
 
 
-@app.route('/chat', methods=['POST'])
-def chat_w_wb():
-    request_json = request.get_json()
-    user_id = request_json['role']
-    if user_id != 'user':
-        return request_json
-    else:
-        question_text = request_json['content']
-        print(chatbot.chat_history)
-        result_text = chatbot.chat(question_text, include_ref=True)
-        return jsonify(result_text)
-
-
 @app.route('/chat_all', methods=['POST'])
 def chat_w_wb_all():
+    chatbot = WBChatBot()
     request_json = request.get_json()
-    result_text = chatbot.chat_all(request_json)
+    # if 'reference' is in the request, remove them
+    msg_list = []
+    for msg in request_json:
+        if 'reference' in msg.keys():
+            msg.pop('reference')
+        msg_list.append(msg)
+    result_text = chatbot.chat_all(msg_list)
     return jsonify(result_text)
-
-
-@app.route('/reset', methods=['POST'])
-def reset_w_wb():
-    chatbot.chat_reset()
-    return jsonify("SUCCESS")
 
 
 @app.route('/')
