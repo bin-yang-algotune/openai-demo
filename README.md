@@ -34,9 +34,13 @@ https://github.com/bin-yang-algotune/openai-demo
 ## Useful Resources
 
 ### Vector Databases
+
 [Pinecone](https://www.pinecone.io/)
-[Milvus*](https://milvus.io/) -> We are currently using in our example docs are [here](https://milvus.io/docs)
+
+[Milvus*](https://milvus.io/) -> We are currently using, docs are [here](https://milvus.io/docs)
+
 [Redis](https://redis.io/)
+
 [Weaviate](https://weaviate.io/)
 
 
