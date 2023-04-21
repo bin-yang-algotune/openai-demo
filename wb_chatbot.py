@@ -68,6 +68,14 @@ def get_training_data_final():
     return output_df
 
 
+def export_data_milvus_format():
+    df = get_training_data_final()
+    result_json_str = df.iloc[3:].to_json(orient='records')
+    result_json_str = '{ "rows":' + result_json_str + '}'
+    with open("wb_train_data_full_transcript.json", "w") as outfile:
+        outfile.write(result_json_str)
+
+
 def get_training_data_wb_transcript(combine_topic: bool = True):
     """
 

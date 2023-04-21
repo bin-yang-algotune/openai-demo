@@ -4,10 +4,35 @@ from typing import Dict, List, Tuple
 import openai
 import pandas as pd
 
+from db_vector import db_search
 from wb_chatbot import get_training_data_final
 from wb_embedding import find_relevant_topics
 
 CHAT_COMPLETIONS_MODEL = "gpt-3.5-turbo"
+
+
+def generate_question_message_db(input_message: Dict[str, str],
+                                 top_n: int = 1,
+                                 distance_threshold: float = 0.8) -> Tuple[Dict[str, str], pd.DataFrame]:
+    """
+    based on a raw user question, query to add context and create a new user message
+    :param distance_threshold:
+    :param input_message:
+    :param top_n:
+    :return:
+    """
+    result_data = db_search(input_message['content'], top_n)
+    result = result_data.loc[result_data['distance'] < distance_threshold]
+    if len(result) > 0:
+        new_user_message = {'role': 'user',
+                            'content':
+                                """context: {}
+                                  Q:{}
+                                  A:""".format('\n'.join(result['source']), input_message['content'])
+                            }
+    else:
+        new_user_message = input_message
+    return new_user_message, result
 
 
 def generate_question_message(input_message: Dict[str, str],
@@ -68,10 +93,10 @@ class WBChatBot:
     def chat(self,
              msg_question: str,
              top_n: int = 1,
-             similarity_score_threshold: float = 0.8):
+             distance_threshold: float = 0.8):
         """
         create a single question function which takes the chat history into consideration
-        :param similarity_score_threshold:
+        :param distance_threshold:
         :param msg_question:
         :param top_n:
         :return:
@@ -98,8 +123,8 @@ class WBChatBot:
             'role': 'user',
             'content': msg_question
         }
-        gen_user_msg, ref_df = generate_question_message(orig_user_msg, top_n=top_n,
-                                                         similarity_score_threshold=similarity_score_threshold)
+        gen_user_msg, ref_df = generate_question_message_db(orig_user_msg, top_n=top_n,
+                                                            distance_threshold=distance_threshold)
 
         msg_list = copy.copy(self.chat_history)
         msg_list.append(gen_user_msg)
@@ -115,10 +140,10 @@ class WBChatBot:
     def chat_all(self,
                  message_list: List[Dict[str, str]],
                  top_n: int = 1,
-                 similarity_score_threshold: float = 0.8):
+                 distance_threshold: float = 0.8):
         """
         pass in all the messages
-        :param similarity_score_threshold:
+        :param distance_threshold:
         :param top_n:
         :param message_list:
         usage:
@@ -137,8 +162,8 @@ class WBChatBot:
         new_msg_list.extend(message_list)
         new_q = new_msg_list.pop()
 
-        gen_user_msg, ref_df = generate_question_message(new_q, top_n=top_n,
-                                                         similarity_score_threshold=similarity_score_threshold)
+        gen_user_msg, ref_df = generate_question_message_db(new_q, top_n=top_n,
+                                                            distance_threshold=distance_threshold)
 
         new_msg_list.append(gen_user_msg)
         result_msg = chat_message_list(new_msg_list)
