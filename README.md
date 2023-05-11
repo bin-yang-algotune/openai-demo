@@ -21,7 +21,8 @@ You can engage with mr. Buffett, ask him questions and receive response based on
 
 ## Web application:
 https://openai-ui-taupe.vercel.app/
-## Youtube series:
+
+## Youtube series (step-by-step guide on how to build the app yourself):
 https://www.youtube.com/playlist?list=PLIz1AjRPWOM6KYzXBAttO1hM-unrsA8rr
 
 ## Opensource projects:

@@ -6,7 +6,6 @@ from pymilvus import connections, utility
 from pymilvus import Collection, DataType, FieldSchema, CollectionSchema
 import uuid
 
-from wb_chatbot import get_training_data_final
 from wb_embedding import get_embeddding
 
 
@@ -53,7 +52,42 @@ def db_search(question_text: str, top_n: int = 1) -> pd.DataFrame:
     return result_df
 
 
-def insert_data_to_milvus():
+def insert_data_to_milvus_only(input_data: pd.DataFrame):
+    milvus_uri = os.getenv('MILVUS_URI')
+    user = os.getenv('MILVUS_USER')
+    password = os.getenv('MILVUS_PASS')
+    connections.connect("default",
+                        uri=milvus_uri,
+                        user=user,
+                        password=password,
+                        secure=True)
+    print(f"Connecting to DB: {milvus_uri}")
+
+    # Check if the collection exists
+    collection_name = "wb_convo"
+    collection = Collection(name=collection_name)
+    input_data['convo_id'] = [str(uuid.uuid4()) for x in range(len(input_data))]
+    input_entities = [
+        input_data['convo_id'].tolist(),
+        input_data['category'].tolist(),
+        input_data['content'].tolist(),
+        input_data['source'].tolist(),
+        input_data['token_count'].tolist(),
+        input_data['openai_embedding'].tolist()
+    ]
+    ins_resp = collection.insert(input_entities)
+    return ins_resp
+
+
+def insert_data_to_milvus(input_data: pd.DataFrame):
+    """
+
+    :param input_data:
+    usage:
+    >>> from wb_chatbot import get_training_data_final
+    >>> input_data = get_training_data_final()
+    >>> insert_data_to_milvus(input_data)
+    """
     milvus_uri = os.getenv('MILVUS_URI')
     user = os.getenv('MILVUS_USER')
     password = os.getenv('MILVUS_PASS')
@@ -70,7 +104,6 @@ def insert_data_to_milvus():
     if check_collection:
         utility.drop_collection(collection_name)
     print("Success!")
-    input_data = get_training_data_final()
 
     input_data['convo_id'] = [str(uuid.uuid4()) for x in range(len(input_data))]
     convo_id = FieldSchema(name="convo_id", dtype=DataType.VARCHAR, max_length=100, is_primary=True)

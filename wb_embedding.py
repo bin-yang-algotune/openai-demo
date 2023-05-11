@@ -6,7 +6,7 @@ import os
 from transformers import GPT2TokenizerFast
 import pandas as pd
 
-from wb_chatbot import get_training_data_wb_transcript, get_training_data_final
+# from wb_chatbot import get_training_data_wb_transcript, get_training_data_final
 
 EMBEDDING_MODEL = 'text-embedding-ada-002'
 COMPLETIONS_MODEL = "text-davinci-003"
@@ -28,16 +28,15 @@ def count_tokens(input_text: str) -> int:
     return len(tokenizer.encode(input_text))
 
 
-def add_token_count_to_wb_transcript():
-    train_data_df = get_training_data_wb_transcript()
-    if 'token_count' not in train_data_df.columns:
+def add_token_count_to_wb_transcript(input_df: pd.DataFrame) -> pd.DataFrame:
+    if 'token_count' not in input_df.columns:
         result_list = []
-        for idx, row in train_data_df.iterrows():
+        for idx, row in input_df.iterrows():
             print('processing [{}]'.format(row['category']))
             input_text = row['content']
             result_list.append(count_tokens(input_text))
-        train_data_df['token_count'] = result_list
-        train_data_df.to_pickle('wb_train_data_full_transcript.pkl')
+        input_df['token_count'] = result_list
+    return input_df
 
 
 def get_embeddding(input_text: str,
@@ -60,14 +59,13 @@ def get_embeddding(input_text: str,
     return result["data"][0]["embedding"]
 
 
-def add_embedding_to_wb_transcript():
+def add_embedding_to_wb_transcript(input_df: pd.DataFrame) -> pd.DataFrame:
     """
     add embeddings to the passages from annual meeting
     """
-    train_data_df = get_training_data_final()
-    if 'openai_embedding' not in train_data_df.columns:
+    if 'openai_embedding' not in input_df.columns:
         result_list = []
-        for idx, row in train_data_df.iterrows():
+        for idx, row in input_df.iterrows():
             print('processing [{}]'.format(row['category']))
             input_text = row['content']
             if row['token_count'] <= 8100:
@@ -75,9 +73,9 @@ def add_embedding_to_wb_transcript():
             else:
                 embedding_data = None
             result_list.append(embedding_data)
-        train_data_df['openai_embedding'] = result_list
-        train_data_df = train_data_df.dropna()
-        train_data_df.to_pickle('wb_train_data_full_transcript.pkl')
+        input_df['openai_embedding'] = result_list
+        input_df = input_df.dropna()
+    return input_df
 
 
 def combine_embedding_completion(question_text: str, context_text: str):

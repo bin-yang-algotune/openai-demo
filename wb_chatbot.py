@@ -7,6 +7,9 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from db_vector import insert_data_to_milvus_only
+from wb_embedding import count_tokens, get_embeddding, add_token_count_to_wb_transcript, add_embedding_to_wb_transcript
+
 
 def run_model():
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -76,25 +79,56 @@ def export_data_milvus_format():
         outfile.write(result_json_str)
 
 
-def get_training_data_wb_transcript(combine_topic: bool = True):
+def get_training_data_wb_transcript(input_df: pd.DataFrame, combine_topic: bool = True):
     """
 
+    :param input_df:
     :param combine_topic:
     :return:
 
     Usage:
+    >>> input_df = pd.read_pickle('wb_train_data_full_transcript.pkl')
     >>> combine_topic = True
     """
-    output_df = pd.read_pickle('wb_train_data_full_transcript.pkl')
+    output_df = input_df
     if combine_topic:
         final_list = []
-        for idx, g in output_df.groupby('category'):
+        for idx, g in input_df.groupby('category'):
             convo_list = g.apply(lambda x: '[{}]: {}'.format(x['speaker'], x['content']), axis=1).values
             title_fix = '. '.join(idx.split('. ')[1:])
             result_tuple = (title_fix, ' \n '.join(convo_list), g['source'].values[0])
             final_list.append(result_tuple)
         output_df = pd.DataFrame(final_list, columns=['category', 'content', 'source'])
     return output_df
+
+
+def parse_insert(url_list: List[str]):
+    insert_df = parse_wb_specific_url_list(url_list)
+    insert_data_to_milvus_only(insert_df)
+
+
+def parse_wb_specific_url_list(url_list: List[str]):
+    """
+
+    :param url_list:
+    Usage:
+    >>> url_list = ['https://buffett.cnbc.com/video/2023/05/08/morning-session---2023-meeting.html',
+    'https://buffett.cnbc.com/video/2023/05/08/afternoon-session---2023-meeting.html']
+    >>> parse_wb_specific_url_list(url_list)
+    """
+    result_list = []
+    for url in url_list:
+        print('process [{}]'.format(url))
+        out_df = parse_cnbc_official_transcript_df(url)
+        if out_df is None:
+            print('skip [{}]'.format(url))
+        else:
+            result_list.append(out_df)
+    final_df = pd.concat(result_list, ignore_index=True)
+    final_df = get_training_data_wb_transcript(final_df)
+    final_df = add_token_count_to_wb_transcript(final_df)
+    final_df = add_embedding_to_wb_transcript(final_df)
+    return final_df
 
 
 def parse_wb_all():
